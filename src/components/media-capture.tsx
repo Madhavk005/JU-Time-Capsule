@@ -13,7 +13,7 @@ interface MediaCaptureProps {
 
 export function MediaCapture({ onMediaCaptured }: MediaCaptureProps) {
   const [mode, setMode] = useState<CaptureMode>("photo");
-  const [stream, setStream] = useState<MediaStream | null>(null);
+
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   
@@ -31,7 +31,7 @@ export function MediaCapture({ onMediaCaptured }: MediaCaptureProps) {
       srcStream.getTracks().forEach(track => track.stop());
       videoRef.current.srcObject = null;
     }
-    setStream(null);
+
   }, []);
 
   const startCamera = useCallback(async () => {
@@ -53,7 +53,7 @@ export function MediaCapture({ onMediaCaptured }: MediaCaptureProps) {
 
       stopStream(); // Stop any existing streams just in case
       streamRef.current = mediaStream;
-      setStream(mediaStream);
+
       
       videoRef.current.srcObject = mediaStream;
       await videoRef.current.play().catch(e => {
@@ -71,6 +71,7 @@ export function MediaCapture({ onMediaCaptured }: MediaCaptureProps) {
   // Automatically start camera on mount or mode change
   useEffect(() => {
     if (mode === "photo") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       startCamera();
     }
     return () => {
