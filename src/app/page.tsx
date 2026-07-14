@@ -108,7 +108,7 @@ export default function Home() {
                 autoStart: true,
                 loop: true,
                 delay: 75,
-                pauseFor: 3000,
+
               }}
             />
           </div>
