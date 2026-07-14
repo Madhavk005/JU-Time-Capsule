@@ -143,7 +143,10 @@ export function CapsuleForm() {
         fileMimeType: fileMimeType || ""
       };
 
-      const response = await fetch("https://script.google.com/macros/s/AKfycbweaaLZrnWY7AiGFO_NL3ycBkB-i2Ey79C8VCVt4PliBDjypSFsphJvfVhlIRiqiNwh/exec", {
+      const scriptUrl = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL;
+      if (!scriptUrl) throw new Error("API URL is not defined in environment variables.");
+
+      const response = await fetch(scriptUrl, {
         method: "POST",
         headers: {
           "Content-Type": "text/plain", // Keep text/plain to avoid CORS preflight
