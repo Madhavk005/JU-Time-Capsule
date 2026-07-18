@@ -97,7 +97,11 @@ function doPost(e) {
       data.fullName || "",
       inputEmail,
       (data.personalEmail || "").toString().trim(),
-      data.graduationYear || ""
+      data.graduationYear || "",
+      data.dream || "",
+      data.fear || "",
+      data.promise || "",
+      fileUrl
     );
     
     return createResponse("success", "Time capsule successfully sealed!");
@@ -261,15 +265,31 @@ function checkAndSendUnlockMails() {
 }
 
 /**
+ * Helper to extract Drive File ID and build an embeddable/previewable image URL.
+ */
+function getEmbedUrlFromDriveUrl(driveUrl) {
+  if (!driveUrl) return "";
+  var fileId = "";
+  var matches = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/id=([a-zA-Z0-9_-]+)/);
+  if (matches && matches[1]) {
+    fileId = matches[1];
+  }
+  if (fileId) {
+    return "https://drive.google.com/thumbnail?sz=w800&id=" + fileId;
+  }
+  return driveUrl;
+}
+
+/**
  * Sends the immediate confirmation email.
  */
-function sendConfirmationEmail(fullName, jecrcEmail, personalEmail, gradYear) {
+function sendConfirmationEmail(fullName, jecrcEmail, personalEmail, gradYear, dream, fear, promise, mediaUrl) {
   var unlockYear = parseInt(gradYear) + 1;
   var unlockDate = getFirstSaturdayOfJanuary(unlockYear);
   var formattedUnlockDate = Utilities.formatDate(unlockDate, Session.getScriptTimeZone(), "EEEE, MMMM d, yyyy");
   
   var subject = "⏳ Your Time Capsule is Sealed successfully! // JECRC University";
-  var htmlBody = getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear);
+  var htmlBody = getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear, dream, fear, promise, mediaUrl);
   
   var recipients = [];
   if (jecrcEmail && jecrcEmail.trim() !== "") {
@@ -322,7 +342,50 @@ function sendUnlockEmail(fullName, jecrcEmail, personalEmail, gradYear, dream, f
 
 // --- HTML EMAIL TEMPLATES ---
 
-function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear) {
+function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear, dream, fear, promise, mediaUrl) {
+  var mediaEmbedHtml = '';
+  var mediaButtonHtml = '';
+  if (mediaUrl && mediaUrl !== "") {
+    var embedUrl = getEmbedUrlFromDriveUrl(mediaUrl);
+    mediaEmbedHtml = 
+      '      <div style="margin: 25px 0; text-align: center;">' +
+      '        <div style="display: inline-block; padding: 10px; background-color: #F9F8F6; border: 1px solid #E4E4E7; border-radius: 20px;">' +
+      '          <img src="' + embedUrl + '" alt="Sealed Memory" style="max-width: 100%; max-height: 350px; border-radius: 12px; display: block; margin: 0 auto;" />' +
+      '        </div>' +
+      '      </div>';
+    
+    mediaButtonHtml = 
+      '      <div style="text-align: center; margin: 15px 0 25px 0;">' +
+      '        <a href="' + mediaUrl + '" target="_blank" style="background-color: #CD201F; color: #FFFFFF; font-size: 14px; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 9999px; display: inline-block; box-shadow: 0 4px 12px rgba(205, 32, 31, 0.15); font-family: Helvetica, Arial, sans-serif; letter-spacing: 0.5px;">' +
+      '          📷 VIEW YOUR SEALED MEDIA' +
+      '        </a>' +
+      '      </div>';
+  }
+
+  var contentsHtml = '';
+  if (dream || fear || promise || mediaUrl) {
+    contentsHtml = 
+      '      <div style="font-family: Georgia, serif; font-size: 18px; color: #CD201F; font-weight: bold; border-bottom: 1px solid #F4F4F5; padding-bottom: 8px; margin-top: 30px; margin-bottom: 12px; font-style: italic;">Your Sealed Memories</div>' +
+      '      <p style="color: #71717A; font-size: 14px; margin-bottom: 20px;">Here is a copy of what you have locked inside your capsule:</p>';
+      
+    if (dream) {
+      contentsHtml += 
+        '      <div style="font-family: Georgia, serif; font-size: 15px; color: #1A1A1A; font-weight: bold; margin-top: 15px; font-style: italic;">One Dream</div>' +
+        '      <div style="background-color: #F9F8F6; border-radius: 12px; padding: 14px 16px; font-size: 14px; color: #27272A; border-left: 4px solid #CD201F; margin-bottom: 15px; white-space: pre-wrap; font-style: italic;">" ' + dream + ' "</div>';
+    }
+    if (fear) {
+      contentsHtml += 
+        '      <div style="font-family: Georgia, serif; font-size: 15px; color: #1A1A1A; font-weight: bold; margin-top: 15px; font-style: italic;">One Fear</div>' +
+        '      <div style="background-color: #F9F8F6; border-radius: 12px; padding: 14px 16px; font-size: 14px; color: #27272A; border-left: 4px solid #CD201F; margin-bottom: 15px; white-space: pre-wrap; font-style: italic;">" ' + fear + ' "</div>';
+    }
+    if (promise) {
+      contentsHtml += 
+        '      <div style="font-family: Georgia, serif; font-size: 15px; color: #1A1A1A; font-weight: bold; margin-top: 15px; font-style: italic;">One Promise</div>' +
+        '      <div style="background-color: #F9F8F6; border-radius: 12px; padding: 14px 16px; font-size: 14px; color: #27272A; border-left: 4px solid #CD201F; margin-bottom: 15px; white-space: pre-wrap; font-style: italic;">" ' + promise + ' "</div>';
+    }
+    contentsHtml += mediaEmbedHtml + mediaButtonHtml;
+  }
+
   return '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
@@ -364,6 +427,7 @@ function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unloc
     '          </tr>' +
     '        </table>' +
     '      </div>' +
+    '      ' + contentsHtml +
     '      <p>Until then, stay curious, work hard, and make the most of every single moment at JECRC. The future is closer than you think.</p>' +
     '      <p style="font-style: italic; color: #71717A; margin-top: 30px;">See you in ' + unlockYear + '!</p>' +
     '    </div>' +
@@ -376,12 +440,21 @@ function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unloc
 }
 
 function getUnlockEmailHtml(fullName, gradYear, dream, fear, promise, mediaUrl) {
+  var mediaEmbedHtml = '';
   var mediaButtonHtml = '';
   if (mediaUrl && mediaUrl !== "") {
+    var embedUrl = getEmbedUrlFromDriveUrl(mediaUrl);
+    mediaEmbedHtml = 
+      '      <div style="margin: 25px 0; text-align: center;">' +
+      '        <div style="display: inline-block; padding: 10px; background-color: #F9F8F6; border: 1px solid #E4E4E7; border-radius: 20px;">' +
+      '          <img src="' + embedUrl + '" alt="Sealed Memory" style="max-width: 100%; max-height: 400px; border-radius: 12px; display: block; margin: 0 auto;" />' +
+      '        </div>' +
+      '      </div>';
+    
     mediaButtonHtml = 
-      '      <div style="text-align: center; margin: 35px 0 20px 0;">' +
+      '      <div style="text-align: center; margin: 20px 0 25px 0;">' +
       '        <a href="' + mediaUrl + '" target="_blank" style="background-color: #CD201F; color: #FFFFFF; font-size: 14px; font-weight: bold; text-decoration: none; padding: 15px 30px; border-radius: 9999px; display: inline-block; box-shadow: 0 4px 12px rgba(205, 32, 31, 0.15); font-family: Helvetica, Arial, sans-serif; letter-spacing: 0.5px;">' +
-      '          📷 VIEW YOUR SEALED PHOTO / MEMORY' +
+      '          📷 VIEW ON GOOGLE DRIVE' +
       '        </a>' +
       '      </div>';
   }
@@ -428,7 +501,7 @@ function getUnlockEmailHtml(fullName, gradYear, dream, fear, promise, mediaUrl) 
     '      <div class="section-title">One Promise</div>' +
     '      <div class="section-content">" ' + promise + ' "</div>' +
     '      ' +
-    '      ' + mediaButtonHtml +
+    '      ' + mediaEmbedHtml + mediaButtonHtml +
     '      ' +
     '      <p style="margin-top: 40px;">No matter where you are or what path you have walked since orientation, we hope you kept your promise. Be proud of how far you have come.</p>' +
     '      <p style="font-weight: bold; margin-top: 25px;">Congratulations on your graduation!</p>' +
