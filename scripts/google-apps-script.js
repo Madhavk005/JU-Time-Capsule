@@ -163,18 +163,20 @@ function setupSheetIfNeeded(sheet) {
   }
 }
 
-/**
- * Calculates the first Saturday of January for a given year.
- */
 function getFirstSaturdayOfJanuary(year) {
+  var yearVal = parseInt(year);
+  if (isNaN(yearVal)) {
+    yearVal = new Date().getFullYear();
+  }
   for (var d = 1; d <= 7; d++) {
-    var date = new Date(year, 0, d);
+    var date = new Date(yearVal, 0, d);
     if (date.getDay() === 6) { // 6 = Saturday
       return date;
     }
   }
-  return null;
+  return new Date(yearVal, 0, 1); // fallback
 }
+
 
 /**
  * Set up daily time-based trigger for unlocking checking.
@@ -284,9 +286,20 @@ function getEmbedUrlFromDriveUrl(driveUrl) {
  * Sends the immediate confirmation email.
  */
 function sendConfirmationEmail(fullName, jecrcEmail, personalEmail, gradYear, dream, fear, promise, mediaUrl) {
-  var unlockYear = parseInt(gradYear) + 1;
+  var yearVal = parseInt(gradYear);
+  if (isNaN(yearVal)) {
+    yearVal = new Date().getFullYear();
+  }
+  var unlockYear = yearVal + 1;
   var unlockDate = getFirstSaturdayOfJanuary(unlockYear);
-  var formattedUnlockDate = Utilities.formatDate(unlockDate, Session.getScriptTimeZone(), "EEEE, MMMM d, yyyy");
+  var formattedUnlockDate = "January " + unlockYear;
+  if (unlockDate && !isNaN(unlockDate.getTime())) {
+    try {
+      formattedUnlockDate = Utilities.formatDate(unlockDate, Session.getScriptTimeZone(), "EEEE, MMMM d, yyyy");
+    } catch (e) {
+      Logger.log("Error formatting date: " + e.toString());
+    }
+  }
   
   var subject = "⏳ Your Time Capsule is Sealed successfully! // JECRC University";
   var htmlBody = getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear, dream, fear, promise, mediaUrl);
