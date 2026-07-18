@@ -3,6 +3,7 @@ import { Montserrat, Playfair_Display, Cormorant_Garamond } from "next/font/goog
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 import { CustomCursor } from "@/components/custom-cursor";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] mix-blend-multiply z-50"></div>
         <Navbar />
         {children}
+        <Footer />
 
         <Toaster theme="light" />
       </body>
