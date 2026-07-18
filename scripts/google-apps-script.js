@@ -220,7 +220,10 @@ function checkAndSendUnlockMails() {
     if (!gradYear || isNaN(gradYear)) continue;
     
     // Skip if already unlocked/sent
-    if (emailSent === "Yes" || emailSent === true) continue;
+    if (emailSent) {
+      var sentStr = emailSent.toString().trim().toLowerCase();
+      if (sentStr === "yes" || sentStr === "true") continue;
+    }
     
     // Target Unlock Date = 1st Saturday of January of (Graduation Year + 1)
     var targetYear = gradYear + 1;
@@ -266,7 +269,7 @@ function sendConfirmationEmail(fullName, jecrcEmail, personalEmail, gradYear) {
   var formattedUnlockDate = Utilities.formatDate(unlockDate, Session.getScriptTimeZone(), "EEEE, MMMM d, yyyy");
   
   var subject = "⏳ Your Time Capsule is Sealed successfully! // JECRC University";
-  var htmlBody = getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate);
+  var htmlBody = getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear);
   
   var recipients = [];
   if (jecrcEmail && jecrcEmail.trim() !== "") {
@@ -319,7 +322,7 @@ function sendUnlockEmail(fullName, jecrcEmail, personalEmail, gradYear, dream, f
 
 // --- HTML EMAIL TEMPLATES ---
 
-function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate) {
+function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate, unlockYear) {
   return '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
@@ -362,7 +365,7 @@ function getConfirmationEmailHtml(fullName, gradYear, formattedUnlockDate) {
     '        </table>' +
     '      </div>' +
     '      <p>Until then, stay curious, work hard, and make the most of every single moment at JECRC. The future is closer than you think.</p>' +
-    '      <p style="font-style: italic; color: #71717A; margin-top: 30px;">See you in ' + gradYear + '!</p>' +
+    '      <p style="font-style: italic; color: #71717A; margin-top: 30px;">See you in ' + unlockYear + '!</p>' +
     '    </div>' +
     '    <div class="footer">' +
     '      <p>Managed by <a href="https://www.instagram.com/socialzbts" target="_blank">JU Socialz</a> &bull; JECRC University</p>' +
@@ -436,4 +439,13 @@ function getUnlockEmailHtml(fullName, gradYear, dream, fear, promise, mediaUrl) 
     '  </div>' +
     '</body>' +
     '</html>';
+}
+
+/**
+ * Test function to run checkAndSendUnlockMails immediately in the script editor.
+ */
+function testRunUnlockCheck() {
+  Logger.log("Starting test run of checkAndSendUnlockMails...");
+  checkAndSendUnlockMails();
+  Logger.log("Finished test run.");
 }

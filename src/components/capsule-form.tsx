@@ -167,7 +167,9 @@ export function CapsuleForm() {
       setSealAnimation(true);
       
       // Wait for the animation to play before redirecting
-      const unlockYear = data.graduationYear || "Graduation";
+      const unlockYear = data.graduationYear 
+        ? (parseInt(data.graduationYear) + 1).toString() 
+        : "Graduation";
       setTimeout(() => {
         router.push(`/success?year=${encodeURIComponent(unlockYear)}`);
       }, 2500);
@@ -233,7 +235,7 @@ export function CapsuleForm() {
 
                  {/* Bottom Text */}
                  <span className="absolute bottom-6 md:bottom-10 text-[#CD201F] text-xs sm:text-sm md:text-base font-black tracking-[0.3em] uppercase drop-shadow-sm">
-                   Until {formValues.graduationYear || "Graduation"}
+                   Until {formValues.graduationYear ? (parseInt(formValues.graduationYear) + 1).toString() : "Graduation"}
                  </span>
               </div>
               
